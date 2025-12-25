@@ -1,0 +1,42 @@
+name: Deploy to staging
+
+on:
+  push: 
+    branchs:
+      -main
+
+jobs:
+  redeploy-everything:
+    name: Deploy everything to staging cluster
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup ssh key
+        run: | 
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/subratdec.pem
+          chmod 700 ~/.ssh/subratdec.pem
+
+      - name: Deploy to EC2 
+        run: | 
+            ssh -o StrictHostKeyChecking=no \
+            -i ~/.ssh/subratdec.pem ubuntu@65.0.133.117 << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+            node -v
+            pnpm -v
+            pm2 -v 
+
+            cd cicd_practice
+            git pull origin main
+            pnpm install
+            pnpm run build
+            pm2 restart frontend
+            pm2 restart backend
+            pm2 restart ws-server
+            EOF
+           
