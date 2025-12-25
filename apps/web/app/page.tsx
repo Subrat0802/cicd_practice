@@ -5,7 +5,7 @@ export default async function Home() {
   return (
     <div>
       Hello frontend,
-
+      <p className="text-7xl font-bold">Subrat Mishra</p>
       {
         res === null ? <p>No user found</p> : <div>
           {
